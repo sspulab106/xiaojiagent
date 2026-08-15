@@ -22,7 +22,8 @@
 #   TOKEN               节点 Token（可选：嵌入后自动回传注册，重跑时保留旧值）
 #   WEB_PASSWORD        面板管理密码（可选：留空时保留既有值，首次安装自动生成）
 #   VIRT_TYPE           虚拟化方式：oci（默认）| incus
-#   LISTEN              监听地址（默认 :8792）
+#   LISTEN              监听地址（默认 :8792；被占用时可改，如 :8793）
+#   PORT_START/PORT_END  容器端口段（默认 20000-40000；被占满会报错，可调整）
 #   DATA_DIR            数据目录（默认 /opt/codetest-agent）
 #   BIN_PATH            Agent 二进制路径（默认 /usr/local/bin/codetest-agent）
 #   SOCKET_PATH         容器引擎 socket（默认按 VIRT_TYPE）
@@ -325,7 +326,7 @@ export CFG_WAN_IFACE="${WAN_IFACE}" CFG_MASTER_URL="${MASTER_URL}" CFG_RFW_ADDR=
   CFG_NDP_NETWORK="${NDP_NETWORK}" \
   CFG_DATA_DIR="${DATA_DIR}" CFG_LISTEN="${LISTEN}" CFG_VIRT_TYPE="${VIRT_TYPE}" \
   CFG_SOCKET_PATH="${SOCKET_PATH}" CFG_CLI_BIN="${CLI_BIN}" CFG_WEB_PASSWORD_DEFAULT="${WEB_PASSWORD_DEFAULT:-}" \
-  CFG_PORT_START="20000" CFG_PORT_END="40000" \
+  CFG_PORT_START="${PORT_START}" CFG_PORT_END="${PORT_END}" \
   TOKEN="${TOKEN:-}" WEB_PASSWORD="${WEB_PASSWORD:-}"
 python3 - <<'PYEOF'
 import json, os
@@ -393,6 +394,46 @@ with open(path, "w") as f:
     json.dump(new, f, indent=2, ensure_ascii=False)
 PYEOF
 chmod 600 "$DATA_DIR/config.json"
+
+# ── 端口占用检测 ──────────────────────────────────────────────────────────
+# 防止监听端口或端口段被其他进程占用导致 Agent 启动失败 / 容器端口冲突。
+# 监听端口被本机旧 Agent 占用时放行（增量更新场景）；被其他进程占用则报错退出。
+listening_ports() {
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltnH 2>/dev/null | awk '{print $4}' | sed 's/.*://'
+  elif command -v netstat >/dev/null 2>&1; then
+    netstat -ltn 2>/dev/null | awk '{print $4}' | sed 's/.*://'
+  fi
+}
+LISTEN_PORT="${LISTEN##*:}"
+PORT_START="${PORT_START:-20000}"
+PORT_END="${PORT_END:-40000}"
+# 1) 监听端口：被其他进程占用 → 报错退出；被本机旧 Agent 占用（增量更新）→ 放行。
+if [ -n "$LISTEN_PORT" ] && [ "$LISTEN_PORT" != "0" ]; then
+  if ss -ltnH 2>/dev/null | awk '{print $4}' | sed 's/.*://' | grep -qx "$LISTEN_PORT"; then
+    if ss -ltnpH 2>/dev/null | awk -v p=":$LISTEN_PORT" 'index($4,p)' | grep -q 'codetest-agent'; then
+      log "监听端口 $LISTEN_PORT 由本机旧 Agent 占用（增量更新，放行）"
+    else
+      owner="$(ss -ltnpH 2>/dev/null | awk -v p=":$LISTEN_PORT" 'index($4,p){print $6}') "
+      echo "✗ 端口 $LISTEN_PORT 已被其他进程占用${owner:+（$owner）}"
+      echo "  请释放该端口，或设置 LISTEN=:其他端口 后重新执行本脚本"
+      exit 1
+    fi
+  fi
+fi
+# 2) 端口段：全部被占满视为无法分配；占用比例过高时给出警告（Agent 按需分配，少量占用正常）。
+if [ "$PORT_END" -ge "$PORT_START" ] 2>/dev/null; then
+  range_total=$((PORT_END - PORT_START + 1))
+  range_used=$(listening_ports | awk -v s="$PORT_START" -v e="$PORT_END" '$1+0>=s && $1+0<=e {c++} END{print c+0}')
+  if [ "$range_used" -ge "$range_total" ]; then
+    echo "✗ 端口段 $PORT_START-$PORT_END 已被全部占用（$range_used/$range_total），无法为容器分配端口"
+    echo "  请释放部分端口，或设置 PORT_START/PORT_END 调整范围后重新执行本脚本"
+    exit 1
+  fi
+  if [ "$range_used" -gt $((range_total * 9 / 10)) ]; then
+    log "警告：端口段 $PORT_START-$PORT_END 已占用 $range_used/$range_total，建议扩大范围"
+  fi
+fi
 
 # docker.io 镜像加速：让 debian/alpine 等预设镜像可直接拉取
 if [ "$VIRT_TYPE" = "oci" ] && command -v podman >/dev/null 2>&1; then

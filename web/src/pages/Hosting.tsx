@@ -188,7 +188,7 @@ export default function Hosting() {
     }
   }, [selectedId])
 
-  // 节点实时监控轮询（15s，降低采集频率与宿主机负载）
+  // 节点实时监控轮询（30s：降低采集频率，避免对宿主机与 API 造成持续压力）
   useEffect(() => {
     if (selectedId === null) return
     let stop = false
@@ -209,7 +209,7 @@ export default function Hosting() {
     }
     setStatsLoading(true)
     poll()
-    const t = setInterval(poll, 15000)
+    const t = setInterval(poll, 30000)
     return () => {
       stop = true
       clearInterval(t)

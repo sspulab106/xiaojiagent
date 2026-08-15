@@ -137,8 +137,8 @@ export default function InstanceDetail() {
   useEffect(() => {
     loadInstance()
     loadStats()
-    // 15s 轮询一次实时统计，降低采集频率与宿主机负载
-    const t = setInterval(loadStats, 15000)
+    // 30s 轮询一次实时统计：降低采集频率，避免持续请求对宿主机造成压力
+    const t = setInterval(loadStats, 30000)
     return () => clearInterval(t)
   }, [loadInstance, loadStats])
 
@@ -396,7 +396,7 @@ export default function InstanceDetail() {
 
       {/* 实时资源曲线 */}
       <Card>
-        <CardHeader title="实时资源曲线" subtitle="最近 100 秒采样（每 5 秒刷新）" />
+        <CardHeader title="实时资源曲线" subtitle="最近 10 分钟采样（每 30 秒刷新）" />
         <CardContent>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             <HistorySparkline label="CPU 使用率" value={`${(stats?.cpu_percent ?? 0).toFixed(1)}%`} data={cpuHist} max={100} color="#4F46E5" />

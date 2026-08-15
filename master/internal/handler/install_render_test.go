@@ -222,6 +222,32 @@ func TestInstallScriptMergePreservesMethod(t *testing.T) {
 	}
 }
 
+// TestInstallScriptHasPortCheck verifies the installer includes port-occupancy
+// detection: it must hard-fail when the listen port is taken by a foreign
+// process, allow it when owned by the previous agent (incremental update), and
+// fail when the whole container port range is exhausted.
+func TestInstallScriptHasPortCheck(t *testing.T) {
+	script := readRepoInstallScript(t)
+	for _, want := range []string{
+		"端口占用检测",
+		"LISTEN_PORT=\"${LISTEN##*:}\"",
+		"已被其他进程占用",
+		"codetest-agent",
+		"端口段",
+		"PORT_START=\"${PORT_START:-20000}\"",
+		"PORT_END=\"${PORT_END:-40000}\"",
+		"exit 1",
+	} {
+		if !strings.Contains(script, want) {
+			t.Fatalf("install-agent.sh missing port-check marker %q", want)
+		}
+	}
+	// 端口段必须可被环境变量覆盖并传入配置合并。
+	if !strings.Contains(script, `CFG_PORT_START="${PORT_START}"`) || !strings.Contains(script, `CFG_PORT_END="${PORT_END}"`) {
+		t.Fatalf("port range env overrides not wired into config merge")
+	}
+}
+
 // TestInstallScriptMergeFirstInstall verifies a fresh install (no existing
 // config) writes the defaults, including an auto-generated web password.
 func TestInstallScriptMergeFirstInstall(t *testing.T) {
