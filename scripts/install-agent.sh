@@ -41,6 +41,9 @@ VIRT_TYPE="${VIRT_TYPE:-oci}"
 LISTEN="${LISTEN:-:8792}"
 DATA_DIR="${DATA_DIR:-/opt/codetest-agent}"
 BIN_PATH="${BIN_PATH:-/usr/local/bin/codetest-agent}"
+# 容器端口段（可覆盖）：在脚本顶部定义，供配置合并与端口占用检测使用。
+PORT_START="${PORT_START:-20000}"
+PORT_END="${PORT_END:-40000}"
 RFW_API="127.0.0.1:7734"                    # rfw 仅监听本地，由 agent 面板反代
 REGISTRY_MIRROR="${REGISTRY_MIRROR:-docker.1panel.live}"
 DATA_DISK="${DATA_DISK_SIZE:-20G}"          # 数据盘大小（XFS pquota），可环境变量覆盖
@@ -406,8 +409,6 @@ listening_ports() {
   fi
 }
 LISTEN_PORT="${LISTEN##*:}"
-PORT_START="${PORT_START:-20000}"
-PORT_END="${PORT_END:-40000}"
 # 1) 监听端口：被其他进程占用 → 报错退出；被本机旧 Agent 占用（增量更新）→ 放行。
 if [ -n "$LISTEN_PORT" ] && [ "$LISTEN_PORT" != "0" ]; then
   if ss -ltnH 2>/dev/null | awk '{print $4}' | sed 's/.*://' | grep -qx "$LISTEN_PORT"; then
