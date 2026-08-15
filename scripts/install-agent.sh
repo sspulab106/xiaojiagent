@@ -81,6 +81,8 @@ fi
 # 兜底：使用已有 docker / incus 时不强制安装
 
 echo "[3/8] 配置内核参数（BBR / 转发 / inotify / IPv6）..."
+# 最小系统可能缺少配置目录，先补齐（幂等）。
+mkdir -p /etc/sysctl.d /etc/systemd/system /etc/containers/registries.conf.d
 cat > /etc/sysctl.d/99-codetest.conf <<'SYSCTL'
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
