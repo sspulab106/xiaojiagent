@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-[#E0E7FF] text-ink antialiased;
+  font-family:
+    "IBM Plex Sans", system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+
+code,
+kbd,
+pre,
+.font-mono {
+  font-family:
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    monospace;
+}
+
+/* 运行中状态点脉冲 */
+.dot-pulse {
+  position: relative;
+}
+.dot-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  animation: dot-pulse 2s ease-out infinite;
+}
+@keyframes dot-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* 快捷键提示（新粗野主义） */
+.kbd {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #18181b;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 0 6px;
+  background: #fff;
+  box-shadow: 1px 1px 0 0 #000;
+}
+
+/* 焦点可见：粗黑描边 */
+:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(192, 132, 252, 0.3);
+}
+
+/* Slim scrollbars (terminal / scroll areas) */
+.narwhal-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.narwhal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.narwhal-scroll::-webkit-scrollbar-thumb {
+  background: rgb(120 113 108 / 0.35);
+  border-radius: 9999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

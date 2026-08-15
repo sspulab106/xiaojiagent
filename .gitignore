@@ -1,0 +1,36 @@
+# Binaries
+bin/
+*.exe
+
+# Go build/test artifacts
+*.test
+*.out
+
+# Runtime data (SQLite databases)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Agent state (NAT rules, instance specs)
+*.state.json
+
+# Frontend
+web/node_modules/
+web/dist/
+web/.vite/
+
+# Env files
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Nested/irrelevant project scaffolds
+web-narwhal/
+.codebuddy/
+*.bak
+
+# Nested reference repo (runman-agent protocol docs)
+docs/runman-agent/

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>独角鲸云 NARWHAL CLOUD — 设计稿</title>
+
+  <!-- Google Fonts: IBM Plex Sans + IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#111111',
+            body: '#525252',
+            muted: '#9CA3AF',
+            hairline: '#E5E5E5',
+            surface: '#FFFFFF',
+            well: '#F5F5F5',
+            brand: '#0066FF',
+            ok: '#16A34A',
+            danger: '#DC2626',
+            warn: '#F59E0B',
+          },
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+          },
+          borderRadius: {
+            sm: '4px',
+            DEFAULT: '6px',
+          },
+          boxShadow: {
+            card: '0 1px 2px rgba(17,17,17,0.04)',
+            pop: '0 8px 24px rgba(17,17,17,0.10)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: '"IBM Plex Sans"', system-ui, sans-serif; }
+    /* 发丝线风格：默认直角 + 极小圆角，工业感 */
+    .hairline { border: 1px solid #E5E5E5; }
+    /* 状态点脉冲 */
+    .pulse-dot { position: relative; }
+    .pulse-dot::after {
+      content: '';
+      position: absolute; inset: -3px;
+      border-radius: 9999px;
+      border: 1px solid currentColor;
+      animation: pulse 2s ease-out infinite;
+    }
+    @keyframes pulse {
+      0%   { transform: scale(0.6); opacity: 0.8; }
+      70%  { transform: scale(1.6); opacity: 0; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    /* 等宽导航快捷键提示 */
+    .kbd {
+      font-family: '"IBM Plex Mono"', monospace;
+      font-size: 10px;
+      color: #9CA3AF;
+      border: 1px solid #E5E5E5;
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      padding: 0 5px;
+      line-height: 1.5;
+    }
+    /* 焦点可见 */
+    :focus-visible { outline: 2px solid #0066FF; outline-offset: 2px; }
+    /* 滚动条 */
+    .scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scroll::-webkit-scrollbar-thumb { background: #E5E5E5; border-radius: 4px; }
+    .scroll::-webkit-scrollbar-track { background: transparent; }
+    /* 选中高亮 */
+    ::selection { background: rgba(0,102,255,0.12); }
+    /* 减少动效 */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+
+<body class="bg-white text-ink antialiased">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-sm focus:bg-brand focus:px-3 focus:py-1.5 focus:text-xs focus:text-white">跳到主要内容</a>
+
+  <!-- 视图切换 -->
+  <div class="fixed right-4 top-4 z-50 flex items-center gap-1 rounded-full border border-hairline bg-white p-1 shadow-pop">
+    <button data-view="landing" class="view-btn rounded-full px-3 py-1 text-xs font-medium text-body transition-colors hover:text-ink">官网</button>
+    <button data-view="console" class="view-btn rounded-full px-3 py-1 text-xs font-medium text-body transition-colors hover:text-ink">控制台</button>
+  </div>
+
+  <!-- ==================== 官网视图 ==================== -->
+  <div id="view-landing" class="view-panel">
+
+    <header class="sticky top-0 z-40 border-b border-hairline bg-white/90 backdrop-blur-sm">
+      <nav class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6" aria-label="主导航">
+        <a href="#" class="flex items-center gap-2">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2C7 2 3 5.5 3 10c0 3.2 1.9 5.9 4.7 7.2L9 20h6l1.3-2.8C19.1 15.9 21 13.2 21 10c0-4.5-4-8-9-8Z" stroke="#111111" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="3.2" stroke="#0066FF" stroke-width="1.6"/></svg>
+          <span class="text-sm font-semibold tracking-tight">独角鲸云 <span class="ml-1 font-mono text-[10px] font-medium uppercase tracking-widest text-muted">Narwhal Cloud</span></span>
+        </a>
+        <div class="hidden items-center gap-7 text-sm text-body md:flex">
+          <a href="#features" class="transition-colors hover:text-ink">产品</a>
+          <a href="#nodes" class="transition-colors hover:text-ink">节点</a>
+          <a href="#pricing" class="transition-colors hover:text-ink">价格</a>
+          <a href="#docs" class="transition-colors hover:text-ink">文档</a>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="#" class="hidden text-sm text-body transition-colors hover:text-ink sm:block">登录</a>
+          <a href="#" class="rounded-[4px] bg-brand px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#0052cc]">进入控制台</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main">
+      <!-- Hero -->
+      <section class="mx-auto max-w-6xl px-4 pt-20 pb-16 sm:px-6 sm:pt-28" aria-labelledby="hero-title">
+        <p class="mb-5 font-mono text-xs text-brand">// NAT VPS · 容器级隔离 · 秒级开通</p>
+        <h1 id="hero-title" class="max-w-2xl text-4xl font-bold leading-[1.1] tracking-tight sm:text-6xl">
+          一台 VPS 的钱，<br>开一排<span class="text-brand">容器</span>。
+        </h1>
+        <p class="mt-5 max-w-xl text-base leading-relaxed text-body sm:text-lg">
+          在宿主机上以容器隔离运行你的 Linux 环境。64MB 起售，按内存付费，
+          端口转发、Web 终端、实时流量统计开箱即用。
+        </p>
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <a href="#pricing" class="rounded-[4px] bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0052cc]">立即创建实例</a>
+          <a href="#console-section" class="rounded-[4px] border border-hairline bg-white px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-well">预览控制台</a>
+        </div>
+        <dl class="mt-12 flex flex-wrap gap-x-10 gap-y-3 border-t border-hairline pt-6">
+          <div class="flex items-baseline gap-2"><dt class="text-xs text-muted">已开通实例</dt><dd class="font-mono text-sm font-semibold text-ink">1,284</dd></div>
+          <div class="flex items-baseline gap-2"><dt class="text-xs text-muted">全球节点</dt><dd class="font-mono text-sm font-semibold text-ink">12</dd></div>
+          <div class="flex items-baseline gap-2"><dt class="text-xs text-muted">平均开通耗时</dt><dd class="font-mono text-sm font-semibold text-ink">0.8s</dd></div>
+          <div class="flex items-baseline gap-2"><dt class="text-xs text-muted">可用性</dt><dd class="font-mono text-sm font-semibold text-ok">99.98%</dd></div>
+        </dl>
+      </section>
+
+      <!-- 终端代码块 -->
+      <section class="mx-auto max-w-6xl px-4 sm:px-6" aria-label="快速开始">
+        <div class="overflow-hidden rounded-[6px] bg-[#0B0D0F] shadow-card">
+          <div class="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-[#FF5F57]"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-[#28C840]"></span>
+            <span class="ml-3 font-mono text-[11px] text-white/40">quickstart — zsh</span>
+          </div>
+          <div class="scroll overflow-x-auto p-5 font-mono text-[13px] leading-7">
+            <p class="text-white/30"># 安装 agent 到你的宿主机</p>
+            <p><span class="text-white/40">$</span> <span class="text-white">curl -fsSL https://panel.narwhal.cloud/install.sh</span> <span class="text-white">| sudo bash</span></p>
+            <p class="text-ok">✓ agent 已安装 · 3s 后节点上线</p>
+            <p class="mt-2 text-white/30"># 一键开一台 debian，64MB 起</p>
+            <p><span class="text-white/40">$</span> <span class="text-white">narwhal create debian --mem 512m --disk 5g</span></p>
+            <p class="text-ok">✓ 实例已创建</p>
+            <p class="text-white">  ssh <span class="text-brand">root@hk-01.narwhal.cloud</span> -p 20007</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 功能网格 -->
+      <section id="features" class="mx-auto max-w-6xl px-4 py-20 sm:px-6" aria-labelledby="features-title">
+        <p class="mb-3 font-mono text-xs text-brand">// features</p>
+        <h2 id="features-title" class="text-3xl font-bold tracking-tight">开箱即用，无需折腾</h2>
+        <div class="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-[6px] border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-3">
+          <article class="bg-white p-6 transition-colors hover:bg-well/60">
+            <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-brand">01 · Speed</p>
+            <h3 class="mt-3 text-base font-semibold">秒级开通</h3>
+            <p class="mt-2 text-sm leading-relaxed text-body">容器引擎自动编排，从点击创建到 SSH 可用平均 0.8 秒，不等镜像构建。</p>
+          </article>
+          <article class="bg-white p-6 transition-colors hover:bg-well/60">
+            <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-brand">02 · Price</p>
+            <h3 class="mt-3 text-base font-semibold">按内存计费</h3>
+            <p class="mt-2 text-sm leading-relaxed text-body">64MB 每月不到一美元，弹性扩缩实时生效，月底按用量结算。</p>
+          </article>
+          <article class="bg-white p-6 transition-colors hover:bg-well/60">
+            <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-brand">03 · Global</p>
+            <h3 class="mt-3 text-base font-semibold">全球节点</h3>
+            <p class="mt-2 text-sm leading-relaxed text-body">香港、新加坡、日本、德国…… 12 个 BGP 优化节点，就近接入。</p>
+          </article>
+          <article class="bg-white p-6 transition-colors hover:bg-well/60">
+            <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-brand">04 · NAT</p>
+            <h3 class="mt-3 text-base font-semibold">原生端口转发</h3>
+            <p class="mt-2 text-sm leading-relaxed text-body">每条规则独立 iptables DNAT，外部端口自由绑定，协议可选 TCP / UDP。</p>
+          </article>
+          <article class="bg-white p-6 transition-colors hover:bg-well/60">
+            <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-brand">05 · Metering</p>
+            <h3 class="mt-3 text-base font-semibold">实时流量统计</h3>
+            <p class="mt-2 text-sm leading-relaxed text-body">出入站按月精确计量，控制台实时图表，超量自动限速不封机。</p>
+          </article>
+          <article class="bg-white p-6 transition-colors hover:bg-well/60">
+            <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-brand">06 · Terminal</p>
+            <h3 class="mt-3 text-base font-semibold">浏览器内终端</h3>
+            <p class="mt-2 text-sm leading-relaxed text-body">WebSocket 直连容器 PTY，无需安装任何 SSH 工具，弱网也能用。</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- 价格 -->
+      <section id="pricing" class="border-y border-hairline bg-well/40">
+        <div class="mx-auto max-w-6xl px-4 py-20 sm:px-6" aria-labelledby="pricing-title">
+          <p class="mb-3 font-mono text-xs text-brand">// pricing</p>
+          <h2 id="pricing-title" class="text-3xl font-bold tracking-tight">透明定价，按内存付费</h2>
+          <div class="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+            <article class="rounded-[6px] border border-hairline bg-white p-6">
+              <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-muted">Spark</p>
+              <p class="mt-4 flex items-baseline gap-1"><span class="font-mono text-3xl font-semibold">$0.99</span><span class="text-sm text-muted">/月</span></p>
+              <ul class="mt-5 space-y-2.5 text-sm text-body">
+                <li class="flex justify-between"><span>内存</span><span class="font-mono">64 MB</span></li>
+                <li class="flex justify-between"><span>磁盘</span><span class="font-mono">1 GB</span></li>
+                <li class="flex justify-between"><span>端口</span><span class="font-mono">1</span></li>
+                <li class="flex justify-between"><span>流量</span><span class="font-mono">200 GB</span></li>
+              </ul>
+              <a href="#" class="mt-6 block rounded-[4px] border border-hairline py-2 text-center text-sm font-semibold transition-colors hover:bg-well">选择 Spark</a>
+            </article>
+            <article class="rounded-[6px] border-2 border-brand bg-white p-6 shadow-card">
+              <p class="flex items-center justify-between"><span class="font-mono text-[11px] font-medium uppercase tracking-widest text-brand">Server</span><span class="rounded-[4px] bg-brand/10 px-2 py-0.5 text-[11px] font-semibold text-brand">最受欢迎</span></p>
+              <p class="mt-4 flex items-baseline gap-1"><span class="font-mono text-3xl font-semibold">$4.99</span><span class="text-sm text-muted">/月</span></p>
+              <ul class="mt-5 space-y-2.5 text-sm text-body">
+                <li class="flex justify-between"><span>内存</span><span class="font-mono">512 MB</span></li>
+                <li class="flex justify-between"><span>磁盘</span><span class="font-mono">5 GB</span></li>
+                <li class="flex justify-between"><span>端口</span><span class="font-mono">5</span></li>
+                <li class="flex justify-between"><span>流量</span><span class="font-mono">1,000 GB</span></li>
+              </ul>
+              <a href="#" class="mt-6 block rounded-[4px] bg-brand py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-[#0052cc]">选择 Server</a>
+            </article>
+            <article class="rounded-[6px] border border-hairline bg-white p-6">
+              <p class="font-mono text-[11px] font-medium uppercase tracking-widest text-muted">Pro</p>
+              <p class="mt-4 flex items-baseline gap-1"><span class="font-mono text-3xl font-semibold">$14.99</span><span class="text-sm text-muted">/月</span></p>
+              <ul class="mt-5 space-y-2.5 text-sm text-body">
+                <li class="flex justify-between"><span>内存</span><span class="font-mono">2 GB</span></li>
+                <li class="flex justify-between"><span>磁盘</span><span class="font-mono">20 GB</span></li>
+                <li class="flex justify-between"><span>端口</span><span class="font-mono">20</span></li>
+                <li class="flex justify-between"><span>流量</span><span class="font-mono">无限</span></li>
+              </ul>
+              <a href="#" class="mt-6 block rounded-[4px] border border-hairline py-2 text-center text-sm font-semibold transition-colors hover:bg-well">选择 Pro</a>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="docs" class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <div class="flex flex-col items-start justify-between gap-8 border-t border-hairline pt-10 md:flex-row">
+        <div>
+          <p class="text-sm font-semibold">独角鲸云 <span class="ml-1 font-mono text-[10px] uppercase tracking-widest text-muted">Narwhal Cloud</span></p>
+          <p class="mt-2 max-w-xs text-sm leading-relaxed text-body">多租户容器 / NAT VPS 平台。文档见 <span class="font-mono text-[13px] text-brand">docs/</span>，SDK 支持 Go / Python / CLI。</p>
+        </div>
+        <div class="grid grid-cols-3 gap-12 text-sm">
+          <div class="space-y-2.5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-muted">产品</p>
+            <a href="#features" class="block text-body hover:text-ink">实例</a>
+            <a href="#pricing" class="block text-body hover:text-ink">端口转发</a>
+            <a href="#pricing" class="block text-body hover:text-ink">Web 终端</a>
+          </div>
+          <div class="space-y-2.5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-muted">资源</p>
+            <a href="#" class="block text-body hover:text-ink">文档</a>
+            <a href="#" class="block text-body hover:text-ink">API 参考</a>
+            <a href="#" class="block text-body hover:text-ink">状态页</a>
+          </div>
+          <div class="space-y-2.5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-muted">公司</p>
+            <a href="#" class="block text-body hover:text-ink">关于</a>
+            <a href="#" class="block text-body hover:text-ink">联系方式</a>
+            <a href="#" class="block text-body hover:text-ink">服务条款</a>
+          </div>
+        </div>
+      </div>
+      <p class="mt-10 font-mono text-xs text-muted">© 2026 Narwhal Cloud · Proudly containerized</p>
+    </footer>
+  </div>
+
+  <!-- ==================== 控制台视图 ==================== -->
+  <div id="view-console" class="view-panel hidden">
+
+    <div class="flex min-h-screen">
+
+      <!-- 侧边栏 -->
+      <aside class="hidden w-56 shrink-0 flex-col border-r border-hairline bg-white lg:flex" aria-label="控制台导航">
+        <div class="flex h-14 items-center gap-2 border-b border-hairline px-4">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2C7 2 3 5.5 3 10c0 3.2 1.9 5.9 4.7 7.2L9 20h6l1.3-2.8C19.1 15.9 21 13.2 21 10c0-4.5-4-8-9-8Z" stroke="#111111" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="3.2" stroke="#0066FF" stroke-width="1.6"/></svg>
+          <span class="text-sm font-semibold">独角鲸云</span>
+        </div>
+        <nav class="flex-1 space-y-0.5 p-3" aria-label="控制台菜单">
+          <p class="px-2 pb-1.5 pt-2 font-mono text-[10px] font-medium uppercase tracking-widest text-muted">概览</p>
+          <a href="#" class="flex items-center justify-between rounded-[4px] bg-brand/10 px-2.5 py-2 text-sm font-medium text-brand">
+            <span>控制面板</span><span class="kbd">/</span>
+          </a>
+          <p class="px-2 pb-1.5 pt-4 font-mono text-[10px] font-medium uppercase tracking-widest text-muted">资源</p>
+          <a href="#" class="flex items-center justify-between rounded-[4px] px-2.5 py-2 text-sm text-body transition-colors hover:bg-well">
+            <span>实例管理</span><span class="kbd">n</span>
+          </a>
+          <a href="#" class="flex items-center justify-between rounded-[4px] px-2.5 py-2 text-sm text-body transition-colors hover:bg-well">
+            <span>托管中心</span><span class="kbd">h</span>
+          </a>
+          <a href="#" class="flex items-center justify-between rounded-[4px] px-2.5 py-2 text-sm text-body transition-colors hover:bg-well">
+            <span>专属 IP</span><span class="kbd">i</span>
+          </a>
+          <p class="px-2 pb-1.5 pt-4 font-mono text-[10px] font-medium uppercase tracking-widest text-muted">账户</p>
+          <a href="#" class="flex items-center justify-between rounded-[4px] px-2.5 py-2 text-sm text-body transition-colors hover:bg-well">
+            <span>账单充值</span><span class="kbd">b</span>
+          </a>
+          <a href="#" class="flex items-center justify-between rounded-[4px] px-2.5 py-2 text-sm text-body transition-colors hover:bg-well">
+            <span>技术支持</span><span class="kbd">?</span>
+          </a>
+        </nav>
+        <div class="border-t border-hairline p-3">
+          <div class="flex items-center gap-2.5 rounded-[4px] px-2 py-2">
+            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-well font-mono text-xs font-semibold">A</span>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium">admin</p>
+              <p class="font-mono text-[11px] text-muted">role: admin</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 主区 -->
+      <div class="min-w-0 flex-1">
+        <header class="flex h-14 items-center justify-between border-b border-hairline bg-white px-5">
+          <div class="flex items-center gap-3 text-sm">
+            <span class="text-muted">控制面板</span>
+            <span class="font-mono text-[11px] text-muted">/</span>
+            <span class="font-medium">总览</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <button type="button" class="hidden items-center gap-2 rounded-[4px] border border-hairline bg-white px-3 py-1.5 font-mono text-xs text-muted transition-colors hover:text-ink sm:flex">
+              <span>搜索…</span><span class="kbd">/</span>
+            </button>
+            <a href="#" class="rounded-[4px] border border-hairline bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:bg-well">充值</a>
+            <a href="#" class="rounded-[4px] bg-brand px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#0052cc]">新建实例</a>
+          </div>
+        </header>
+
+        <main class="mx-auto max-w-6xl space-y-6 p-5 sm:p-8">
+          <!-- 统计卡片 -->
+          <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="账户统计">
+            <div class="rounded-[6px] border border-hairline bg-white p-5">
+              <p class="text-xs text-muted">账户余额</p>
+              <p class="mt-2 font-mono text-2xl font-semibold">$23.40</p>
+              <p class="mt-1 font-mono text-[11px] text-ok">+$5.00 本周</p>
+            </div>
+            <div class="rounded-[6px] border border-hairline bg-white p-5">
+              <p class="text-xs text-muted">运行中实例</p>
+              <p class="mt-2 font-mono text-2xl font-semibold">4 <span class="text-sm font-normal text-muted">/ 6</span></p>
+              <div class="mt-3 h-1 w-full overflow-hidden rounded-full bg-well"><div class="h-full w-2/3 rounded-full bg-brand"></div></div>
+            </div>
+            <div class="rounded-[6px] border border-hairline bg-white p-5">
+              <p class="text-xs text-muted">本月流量</p>
+              <p class="mt-2 font-mono text-2xl font-semibold">128.5 <span class="text-sm font-normal text-muted">GB</span></p>
+              <p class="mt-1 font-mono text-[11px] text-warn">62% 已用</p>
+            </div>
+            <div class="rounded-[6px] border border-hairline bg-white p-5">
+              <p class="text-xs text-muted">在线节点</p>
+              <p class="mt-2 font-mono text-2xl font-semibold">3 <span class="text-sm font-normal text-muted">/ 3</span></p>
+              <p class="mt-1 flex items-center gap-1.5 text-[11px] text-ok">
+                <span class="pulse-dot h-1.5 w-1.5 rounded-full bg-ok text-ok"></span>全部在线
+              </p>
+            </div>
+          </section>
+
+          <!-- 实例表格 -->
+          <section aria-labelledby="instances-title">
+            <div class="mb-3 flex items-center justify-between">
+              <h2 id="instances-title" class="text-base font-semibold">实例列表</h2>
+              <div class="flex items-center gap-1 rounded-[4px] border border-hairline bg-white p-0.5 text-xs">
+                <button type="button" class="rounded-[3px] bg-well px-3 py-1 font-medium">全部</button>
+                <button type="button" class="rounded-[3px] px-3 py-1 text-muted transition-colors hover:text-ink">运行中</button>
+                <button type="button" class="rounded-[3px] px-3 py-1 text-muted transition-colors hover:text-ink">已停止</button>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-[6px] border border-hairline bg-white">
+              <div class="scroll overflow-x-auto">
+                <table class="w-full min-w-[720px] text-sm">
+                  <thead>
+                    <tr class="border-b border-hairline text-left font-mono text-[11px] uppercase tracking-widest text-muted">
+                      <th class="px-4 py-3 font-medium">名称</th>
+                      <th class="px-4 py-3 font-medium">SSH</th>
+                      <th class="px-4 py-3 font-medium">状态</th>
+                      <th class="px-4 py-3 font-medium">配置</th>
+                      <th class="px-4 py-3 font-medium">流量</th>
+                      <th class="px-4 py-3 font-medium">到期日</th>
+                      <th class="px-4 py-3 text-right font-medium">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="border-b border-hairline last:border-0 transition-colors hover:bg-well/50">
+                      <td class="px-4 py-3">
+                        <p class="font-medium">hk-01</p>
+                        <p class="font-mono text-[11px] text-muted">debian/13</p>
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-brand">hk-01:20000</td>
+                      <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 font-mono text-xs text-ok"><span class="pulse-dot h-1.5 w-1.5 rounded-full bg-ok text-ok"></span>running</span></td>
+                      <td class="px-4 py-3 font-mono text-xs text-body">1C / 512M / 5G</td>
+                      <td class="px-4 py-3">
+                        <div class="w-28"><div class="h-1 w-full rounded-full bg-well"><div class="h-full w-[62%] rounded-full bg-brand"></div></div><p class="mt-1 font-mono text-[11px] text-muted">620/1000 GB</p></div>
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-body">2026-09-01</td>
+                      <td class="px-4 py-3">
+                        <div class="flex justify-end gap-1.5">
+                          <button type="button" class="rounded-[4px] border border-hairline px-2.5 py-1 text-xs transition-colors hover:bg-well">详情</button>
+                          <button type="button" class="rounded-[4px] border border-hairline px-2.5 py-1 text-xs transition-colors hover:bg-well">终端</button>
+                          <button type="button" class="rounded-[4px] border border-danger/30 px-2.5 py-1 text-xs text-danger transition-colors hover:bg-danger/5">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="border-b border-hairline last:border-0 transition-colors hover:bg-well/50">
+                      <td class="px-4 py-3">
+                        <p class="font-medium">sg-mirror</p>
+                        <p class="font-mono text-[11px] text-muted">alpine/3.20</p>
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-brand">sg-01:20001</td>
+                      <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 font-mono text-xs text-ok"><span class="pulse-dot h-1.5 w-1.5 rounded-full bg-ok text-ok"></span>running</span></td>
+                      <td class="px-4 py-3 font-mono text-xs text-body">1C / 1024M / 10G</td>
+                      <td class="px-4 py-3">
+                        <div class="w-28"><div class="h-1 w-full rounded-full bg-well"><div class="h-full w-[18%] rounded-full bg-brand"></div></div><p class="mt-1 font-mono text-[11px] text-muted">180/1000 GB</p></div>
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-body">2026-08-25</td>
+                      <td class="px-4 py-3">
+                        <div class="flex justify-end gap-1.5">
+                          <button type="button" class="rounded-[4px] border border-hairline px-2.5 py-1 text-xs transition-colors hover:bg-well">详情</button>
+                          <button type="button" class="rounded-[4px] border border-hairline px-2.5 py-1 text-xs transition-colors hover:bg-well">终端</button>
+                          <button type="button" class="rounded-[4px] border border-danger/30 px-2.5 py-1 text-xs text-danger transition-colors hover:bg-danger/5">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="border-b border-hairline last:border-0 transition-colors hover:bg-well/50">
+                      <td class="px-4 py-3">
+                        <p class="font-medium">jp-proxy</p>
+                        <p class="font-mono text-[11px] text-muted">debian/12</p>
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-muted">jp-02:20002</td>
+                      <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 font-mono text-xs text-muted"><span class="h-1.5 w-1.5 rounded-full bg-muted"></span>stopped</span></td>
+                      <td class="px-4 py-3 font-mono text-xs text-body">2C / 2048M / 20G</td>
+                      <td class="px-4 py-3">
+                        <div class="w-28"><div class="h-1 w-full rounded-full bg-well"><div class="h-full w-[9%] rounded-full bg-brand"></div></div><p class="mt-1 font-mono text-[11px] text-muted">90/1000 GB</p></div>
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-danger">已过期</td>
+                      <td class="px-4 py-3">
+                        <div class="flex justify-end gap-1.5">
+                          <button type="button" class="rounded-[4px] border border-hairline px-2.5 py-1 text-xs transition-colors hover:bg-well">详情</button>
+                          <button type="button" class="rounded-[4px] border border-hairline px-2.5 py-1 text-xs transition-colors hover:bg-well">启动</button>
+                          <button type="button" class="rounded-[4px] border border-danger/30 px-2.5 py-1 text-xs text-danger transition-colors hover:bg-danger/5">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 节点状态 -->
+          <section aria-labelledby="nodes-title">
+            <h2 id="nodes-title" class="mb-3 text-base font-semibold">节点状态</h2>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <div class="rounded-[6px] border border-hairline bg-white p-5">
+                <div class="flex items-center justify-between">
+                  <p class="font-mono text-sm font-medium">hk-01</p>
+                  <span class="inline-flex items-center gap-1.5 text-[11px] text-ok"><span class="pulse-dot h-1.5 w-1.5 rounded-full bg-ok text-ok"></span>在线</span>
+                </div>
+                <p class="mt-1 font-mono text-[11px] text-muted">香港 · 10.0.0.11</p>
+                <div class="mt-4 space-y-2">
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">CPU</span><span>34%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[34%] rounded-full bg-brand"></div></div></div>
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">内存</span><span>58%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[58%] rounded-full bg-brand"></div></div></div>
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">磁盘</span><span>41%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[41%] rounded-full bg-brand"></div></div></div>
+                </div>
+              </div>
+              <div class="rounded-[6px] border border-hairline bg-white p-5">
+                <div class="flex items-center justify-between">
+                  <p class="font-mono text-sm font-medium">sg-01</p>
+                  <span class="inline-flex items-center gap-1.5 text-[11px] text-ok"><span class="pulse-dot h-1.5 w-1.5 rounded-full bg-ok text-ok"></span>在线</span>
+                </div>
+                <p class="mt-1 font-mono text-[11px] text-muted">新加坡 · 10.0.0.12</p>
+                <div class="mt-4 space-y-2">
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">CPU</span><span>21%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[21%] rounded-full bg-brand"></div></div></div>
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">内存</span><span>47%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[47%] rounded-full bg-brand"></div></div></div>
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">磁盘</span><span>33%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[33%] rounded-full bg-brand"></div></div></div>
+                </div>
+              </div>
+              <div class="rounded-[6px] border border-hairline bg-white p-5">
+                <div class="flex items-center justify-between">
+                  <p class="font-mono text-sm font-medium">jp-02</p>
+                  <span class="inline-flex items-center gap-1.5 text-[11px] text-ok"><span class="pulse-dot h-1.5 w-1.5 rounded-full bg-ok text-ok"></span>在线</span>
+                </div>
+                <p class="mt-1 font-mono text-[11px] text-muted">东京 · 10.0.0.13</p>
+                <div class="mt-4 space-y-2">
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">CPU</span><span>12%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[12%] rounded-full bg-brand"></div></div></div>
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">内存</span><span>39%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[39%] rounded-full bg-brand"></div></div></div>
+                  <div><div class="mb-1 flex justify-between font-mono text-[11px]"><span class="text-muted">磁盘</span><span>28%</span></div><div class="h-1 rounded-full bg-well"><div class="h-full w-[28%] rounded-full bg-brand"></div></div></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 视图切换（官网 / 控制台）
+    const btns = document.querySelectorAll('.view-btn')
+    const panels = document.querySelectorAll('.view-panel')
+    btns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.view
+        panels.forEach((p) => p.classList.toggle('hidden', p.id !== 'view-' + target))
+        btns.forEach((b) => {
+          const active = b.dataset.view === target
+          b.classList.toggle('bg-ink', active)
+          b.classList.toggle('text-white', active)
+          b.classList.toggle('text-body', !active)
+        })
+      })
+    })
+    // 初始标记官网按钮激活
+    document.querySelector('[data-view="landing"]').classList.add('bg-ink', 'text-white')
+  </script>
+</body>
+</html>
