@@ -32,6 +32,7 @@
 #   DATA_DISK_SIZE      XFS 数据盘大小（默认 20G）
 #   SKIP_NDP_CHECK=1    跳过 subnet 模式的 NDP 自检
 #   REPO_RAW            本仓库 raw 根（默认 https://raw.githubusercontent.com/sspulab106/xiaojiagent/main）
+#   RFW_BASE            rfw 防火墙下载源（默认 xiaojiagent release `rfw`，dev 分支构建含 REST API）
 # =============================================================================
 set -euo pipefail
 
@@ -279,9 +280,15 @@ install_rfw() {
     aarch64) triple="aarch64-unknown-linux-musl" ;;
     *) return 0 ;;
   esac
-  if [ ! -x "$DATA_DIR/rfw" ]; then
+  # 主源：xiaojiagent release `rfw`（dev 分支构建，含 REST API）；
+  # 上游 latest 发布版不含 API，仅作最后兜底。
+  RFW_BASE="${RFW_BASE:-https://github.com/sspulab106/xiaojiagent/releases/download/rfw}"
+  if [ ! -x "$DATA_DIR/rfw" ] || [ "${RFW_FORCE:-0}" = "1" ]; then
     log "下载 rfw ($triple)..."
-    curl -fsSL --max-time 180 -o "$DATA_DIR/rfw.new" "https://github.com/narwhal-cloud/rfw/releases/latest/download/rfw-$triple" || { log "rfw 下载失败，跳过安装"; return 0; }
+    if ! curl -fsSL --max-time 180 -o "$DATA_DIR/rfw.new" "$RFW_BASE/rfw-$triple"; then
+      log "主源下载失败，回退上游 latest..."
+      curl -fsSL --max-time 180 -o "$DATA_DIR/rfw.new" "https://github.com/narwhal-cloud/rfw/releases/latest/download/rfw-$triple" || { log "rfw 下载失败，跳过安装"; return 0; }
+    fi
     chmod +x "$DATA_DIR/rfw.new" && mv "$DATA_DIR/rfw.new" "$DATA_DIR/rfw"
   fi
   cat > /etc/systemd/system/rfw.service <<EOF
@@ -294,7 +301,7 @@ Type=simple
 User=root
 Environment=RUST_LOG=info
 WorkingDirectory=$DATA_DIR
-ExecStart=$DATA_DIR/rfw --iface $WAN_IFACE --api-addr $RFW_API
+ExecStart=$DATA_DIR/rfw --iface $WAN_IFACE
 Restart=always
 RestartSec=5
 

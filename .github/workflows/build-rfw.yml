@@ -1,0 +1,68 @@
+name: build-rfw
+
+# 构建 narwhal-cloud/rfw @ dev（该分支才包含 agent 所需的 REST API：
+# GET /api/status、POST /api/rules 等），产物发布到 release tag `rfw`，
+# 供 scripts/install-agent.sh 增量安装防火墙时下载。
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/build-rfw.yml', 'scripts/install-agent.sh']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: rfw ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-musl
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Checkout rfw (dev)
+        uses: actions/checkout@v5
+        with:
+          repository: narwhal-cloud/rfw
+          ref: dev
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools clang llvm libelf-dev zlib1g-dev
+          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-musl" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+          fi
+
+      - name: Install Rust toolchains
+        run: |
+          rustup toolchain install nightly --component rust-src
+          rustup target add --toolchain stable ${{ matrix.target }}
+
+      - name: Install bpf-linker
+        run: cargo install bpf-linker --locked
+
+      - name: Build release binary
+        run: cargo build --package rfw --release --target ${{ matrix.target }}
+        env:
+          CC: ${{ matrix.target == 'aarch64-unknown-linux-musl' && 'aarch64-linux-gnu-gcc' || 'musl-gcc' }}
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
+
+      - name: Prepare binary
+        run: |
+          cp target/${{ matrix.target }}/release/rfw rfw-${{ matrix.target }}
+          chmod +x rfw-${{ matrix.target }}
+
+      - name: Upload to release (tag `rfw`)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: rfw
+          name: rfw (dev-build with REST API)
+          body: |
+            rfw @ dev 分支构建（包含 agent/master 防火墙管理所需的 REST API）。
+            由 xiaojiagent 的 build-rfw workflow 自动重建。
+          files: rfw-${{ matrix.target }}
+          overwrite: true
+          prerelease: true
